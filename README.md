@@ -20,7 +20,7 @@ go to `Preferences > Packages`, search for `racer`, and click `Settings`
 | Display Name                             | Description                                                                                                                                                      | Required | Name                          |
 |:-----------------------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------|:---------|:------------------------------|
 | Path to the Racer executable             | Full path (including executable) of Racer's binary (e.g. `/Users/me/racer/bin/racer` or `c:\racer\bin\racer.exe`)                                                | `YES`    | `racer.racerBinPath`          |
-| Path to the Rust source code directory   | Should point to the rustc source directory (e.g. `/Users/me/code/rust/src/`)                                                                                     | `YES`    | `racer.rustSrcPath`           |
+| Path to the Rust source code directory   | Should point to the rustc source directory (e.g. `/Users/me/code/rust/src/`)                                                                                     | `NO`    | `racer.rustSrcPath`           |
 | Autocomplete Scope Blacklist             | Scopes for which no suggestions will be made (e.g. `.source.go .comment`)                                                                                        | `NO`     | `racer.autocompleteBlacklist` |
 | Show position for editor with definition | Can be `Right` or `New`. If `Right` is selected and your view is vertically split, the item will be open in the rightmost pane of the current active pane's row. | `NO`     | `racer.show`                  |
 
@@ -36,24 +36,3 @@ Your configuration is probably wrong:
 * The path to Racer has to point to the *Racer binary executable* (this is **NOT a directory** we request here).
 * The Rustc source has to point to the *base directory of the source code*.
 * The Atom package *language-rust* is installed and active.
-
-### My project tree (tree-view) flickers:
-We use temporary files to communicate with racer and need to place them along with your source files.
-
-We shaped them as `._racertmpXXXXX` because the `._*` files are ignored by default by Atom.
-
-Change your configuration so that the `tree-view` package follows Atom ignore rules!
-* Open `Settings > Packages`
-* Search the core package called `tree-view`, click `Settings`
-* Check the box called `Hide Ignored Names`
-
-Note: by the way, you can control what is ignored in the main Atom settings top panel.
-* Open `Settings > Settings` (the first tab)
-* Search the "core settings" section for the `Ignored Names` field
-* check that it's either empty (default), or contains `._*`, or add yourself a `._racertmp*` entry if you already changed the settings.
-
-### Why do you constantly put (and remove) temporary files in my project:
-We use temporary files to communicate with racer and need to place them along with your source files so that racer:
-* locates your project,
-* provides completion for your whole projects code,
-* locates your cargo file if it exists and use it to provide completion for your dependencies.

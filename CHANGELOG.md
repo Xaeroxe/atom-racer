@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.21.0 (2017-08-16)
+Package will no longer try to auto-complete after a semicolon
+Package no longer uses temporary files
+Package no longer requires a rust source directory if racer can find it automatically.
+
 ## v0.17.2 (2015-09-11)
 Workaround for race condition caused by multiple racer processes being opened as the user types.
 
