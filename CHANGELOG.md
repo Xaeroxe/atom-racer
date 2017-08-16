@@ -1,6 +1,9 @@
 # Changelog
 
-## v0.21.0 (2017-08-16)
+## v0.23.0 (2017-08-16)
+Racer bin path is no longer required if racer is on system path.
+
+## v0.22.0 (2017-08-16)
 Package will no longer try to auto-complete after a semicolon
 Package no longer uses temporary files
 Package no longer requires a rust source directory if racer can find it automatically.

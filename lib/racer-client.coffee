@@ -52,8 +52,16 @@ class RacerClient
 
   check_definition: check_generator("find-definition")
 
+  find_racer_path: () ->
+    for p in process.env.PATH.split(':')
+      pArray = p.split('/')
+      if pArray[pArray.length - 1] == 'racer'
+        return p
+
   process_env_vars: ->
     config_is_valid = true
+
+    atom.config.set('racer.racerBinPath', @find_racer_path())
 
     if !@racer_bin?
       conf_bin = atom.config.get("racer.racerBinPath")
@@ -97,9 +105,6 @@ class RacerClient
       if match?.length > 4
         candidate = {word: match[1], line: parseInt(match[2], 10), column: parseInt(match[3], 10), filePath: match[4], file: "this", type: match[5], context: match[6]}
         file_name = path.basename(match[4])
-        if path.extname(match[4]).indexOf(".racertmp") == 0
-          candidate.filePath = path.dirname(match[4]) + path.sep + file_name.match(/\._(.*)\.racertmp.*?$/)[1]
-        else
-          candidate.file = file_name
+        candidate.file = file_name
         matches.push(candidate)
     return matches
