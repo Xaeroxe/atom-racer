@@ -10,8 +10,8 @@
 2. Ensure you have [Racer](https://github.com/phildawes/racer) properly installed.
 3. Ensure you have a copy of the [rustc source code](http://www.rust-lang.org/install.html) extracted on your disk.
 4. Install this package via Atom's package manager:
- * go to `Preferences > Packages`, search for `racer`, and install it
- * **OR** use the command line `apm install racer`).
+ * go to `Preferences > Packages`, search for `racer-plus`, and install it
+ * **OR** use the command line `apm install racer-plus`).
 
 ## Configuration
 
