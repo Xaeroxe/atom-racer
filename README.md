@@ -1,4 +1,4 @@
-# [Racer](https://atom.io/packages/racer)
+# [Racer-plus](https://atom.io/packages/racer-plus)
 
 > Providing intelligent code completion and "find definition" for Rust via [Racer](https://github.com/phildawes/racer).
 
