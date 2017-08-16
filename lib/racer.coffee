@@ -7,12 +7,12 @@ module.exports =
     racerBinPath:
       title: 'Path to the Racer executable'
       type: 'string'
-      default: '/usr/local/bin/racer'
+      default: ''
       order: 1
     rustSrcPath:
       title: 'Path to the Rust source code directory'
       type: 'string'
-      default: '/usr/local/src/rust/src/'
+      default: ''
       order: 2
     cargoHome:
       title: 'Cargo home directory (optional)'
