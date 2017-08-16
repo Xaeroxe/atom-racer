@@ -53,7 +53,8 @@ class RacerClient
   check_definition: check_generator("find-definition")
 
   find_racer_path: () ->
-    for p in process.env.PATH.split(':')
+    delimiter = /^win/.test(process.platform) ? ';' : ':'
+    for p in process.env.PATH.split(delimiter)
       pArray = p.split('/')
       if pArray[pArray.length - 1] == 'racer'
         return p
@@ -61,9 +62,15 @@ class RacerClient
   process_env_vars: ->
     config_is_valid = true
 
-    atom.config.set('racer.racerBinPath', @find_racer_path())
-
     if !@racer_bin?
+      conf_bin = atom.config.get("racer.racerBinPath")
+      if conf_bin
+        try
+          stats = fs.statSync(conf_bin);
+          if stats?.isFile()
+            @racer_bin = conf_bin
+    if !@racer_bin?
+      atom.config.set('racer.racerBinPath', @find_racer_path())
       conf_bin = atom.config.get("racer.racerBinPath")
       if conf_bin
         try

@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.24.0 (2017-08-16)
+Fix auto bin path for windows
+
 ## v0.23.0 (2017-08-16)
 Racer bin path is no longer required if racer is on system path.
 
