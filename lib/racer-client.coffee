@@ -1,5 +1,4 @@
 {BufferedProcess} = require 'atom'
-_ = require 'underscore-plus'
 fs = require 'fs'
 path = require 'path'
 
@@ -8,49 +7,79 @@ class RacerClient
   racer_bin: null
   rust_src: null
   cargo_home: null
-  project_path: null
-  candidates: null
+  candidates: []
   last_stderr: null
-  last_process: null
+  racer: null
+  resultHandler: null
+  commandQueue: []
 
-  check_generator = (racer_action) ->
-    (editor, row, col, cb) ->
-      if !@process_env_vars()
-        atom.notifications.addFatalError "Atom racer is not properly configured."
-        cb null
-        return
 
-      options =
-        command: @racer_bin
-        args: [racer_action, row + 1, col, editor.getPath(), "-"]
-        stdout: (output) =>
-          return unless this_process == @latest_process
-          parsed = @parse_single(output)
-          @candidates.push(parsed) if parsed
-          return
-        stderr: (output) =>
-            return unless this_process == @latest_process
-            @last_stderr = output
-            return
-        exit: (code) =>
-          return unless this_process == @latest_process
-          @candidates = _.uniq(_.compact(_.flatten(@candidates)), (e) => e.word + e.file + e.type )
-          cb @candidates
-          if code == 3221225781
-            atom.notifications.addWarning "racer could not find a required DLL; copy racer to your Rust bin directory"
-          else if code != 0
-            atom.notifications.addWarning "racer returned a non-zero exit code: #{code}\n#{@last_stderr}"
-          return
-
-      @candidates = []
-      @latest_process = this_process = new BufferedProcess(options)
-      this_process.process.stdin.write editor.getText()
-      this_process.process.stdin.end()
+  constructor: ->
+    if !@process_env_vars()
+      atom.notifications.addFatalError "Atom racer is not properly configured."
       return
 
-  check_completion: check_generator("complete")
+    options =
+      command: @racer_bin
+      args: ['-i', 'tab-text', 'daemon']
+      stdout: (output) =>
+        [parsed, isLast] = @parse_lines(output)
+        @candidates = @candidates.concat(parsed) if parsed?.length
+        if isLast
+          # pass the results to the result handler and reset state for next handler
+          if @resultHandler then @resultHandler(@candidates)
+          delete @resultHandler
+          @candidates = []
+          # run the next entry in the queue of waiting commands
+          nextCommand = @commandQueue.shift()
+          if nextCommand then nextCommand()
+      stderr: (output) =>
+          @last_stderr = output
+          return
+      exit: (code) =>
+        if code == 3221225781
+          atom.notifications.addWarning "racer could not find a required DLL; copy racer to your Rust bin directory"
+        else if code != 0
+          atom.notifications.addWarning "racer returned a non-zero exit code: #{code}\n#{@last_stderr}"
+        return
 
-  check_definition: check_generator("find-definition")
+    @racer = new BufferedProcess(options)
+
+  destructor: ->
+    # Kill the racer process when we're done
+    @racer.process.kill()
+
+  # run a racer command
+  run_command: (racer_action, editor, row, col, cb) ->
+
+    # register for output
+    @resultHandler = (result) =>
+      cb result
+
+    # write our params
+    params = [racer_action, row + 1, col, editor.getPath(), "-"].join('\t')
+    @racer.process.stdin.write(params + '\n')
+    @racer.process.stdin.write(editor.getText() + '\x04')
+
+  # wait for our turn to run a command
+  attempt_command: (args...) ->
+
+    # if there is already a registered result handler
+    if @resultHandler
+      # wait at the end of the command queue
+      @commandQueue.push( =>
+        @attempt_command(args...)
+      )
+      return
+
+    # otherwise run the command right away
+    @run_command(args...)
+
+  check_completion: (args...) ->
+    @attempt_command("complete", args...)
+
+  check_definition: (args...) ->
+    @attempt_command("find-definition", args...)
 
   process_env_vars: ->
     config_is_valid = true
@@ -89,13 +118,22 @@ class RacerClient
 
     return config_is_valid
 
-  parse_single: (line) ->
+  parse_lines: (lines) ->
     matches = []
-    rcrgex = /MATCH (\w*)\,(\d*)\,(\d*)\,([^\,]*)\,(\w*)\,(.*)\n/mg
-    while match = rcrgex.exec(line)
-      if match?.length > 4
-        candidate = {word: match[1], line: parseInt(match[2], 10), column: parseInt(match[3], 10), filePath: match[4], file: "this", type: match[5], context: match[6]}
-        file_name = path.basename(match[4])
-        candidate.file = file_name
+    isLast = false
+    for line in lines.split('\n')
+      result = line.split('\t')
+      if result[0] == 'MATCH'
+        candidate = {
+          word: result[1],
+          line: parseInt(result[2], 10),
+          column: parseInt(result[3], 10),
+          filePath: result[4],
+          file: path.basename(result[4]) or "this",
+          type: result[5],
+          context: result[6]
+        }
         matches.push(candidate)
-    return matches
+      else if result[0] == 'END'
+        isLast = true
+    return [matches, isLast]

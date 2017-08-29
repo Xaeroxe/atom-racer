@@ -1,3 +1,6 @@
 .DS_Store
 npm-debug.log
 node_modules
+
+# this project doesn't currently use yarn, so don't check in the lockfile.
+yarn.lock
