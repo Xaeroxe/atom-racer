@@ -1,4 +1,5 @@
 {BufferedProcess} = require 'atom'
+_ = require 'underscore-plus'
 fs = require 'fs'
 path = require 'path'
 
